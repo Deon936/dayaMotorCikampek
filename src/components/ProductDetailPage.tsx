@@ -32,7 +32,7 @@ export function ProductDetailPage() {
         setError(null);
 
         const response = await fetch(
-          `http://localhost/backend/api/motorcycles.php?id=${id}`
+          `https://superanimal-karson-vermiform.ngrok-free.dev/backend/api/motorcycles.php?id=${id}`
         );
         if (!response.ok) throw new Error("Failed to fetch motorcycle details");
 
