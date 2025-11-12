@@ -21,7 +21,7 @@ export function RegisterPage() {
   });
   const navigate = useNavigate();
 
-  const API_BASE = "https://superanimal-karson-vermiform.ngrok-free.dev/backend/api";
+  const API_BASE = "http://localhost/backend/backend/api";
 
   const validateForm = () => {
     if (!formData.name.trim()) {
