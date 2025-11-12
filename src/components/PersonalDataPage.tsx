@@ -10,9 +10,9 @@ import { Tabs, TabsContent } from "./ui/tabs";
 import { Badge } from "./ui/badge";
 import { toast } from "sonner";
 
-const API_CUSTOMERS = "http://localhost/backend/api/profile.php";
-const API_ORDERS = "http://localhost/backend/api/orders.php";
-const API_PAYMENTS = "http://localhost/backend/api/manual_payment.php";
+const API_CUSTOMERS = "https://superanimal-karson-vermiform.ngrok-free.dev/backend/api/profile.php";
+const API_ORDERS = "https://superanimal-karson-vermiform.ngrok-free.dev/backend/api/orders.php";
+const API_PAYMENTS = "https://superanimal-karson-vermiform.ngrok-free.dev/backend/api/manual_payment.php";
 
 // Tipe data yang lebih jelas
 interface UserProfile {
