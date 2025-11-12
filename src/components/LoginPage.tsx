@@ -13,10 +13,10 @@ import {
 import { Eye, EyeOff, AlertCircle, Loader2 } from "lucide-react";
 import { Alert, AlertDescription } from "./ui/alert";
 
-const API_URL = "https://superanimal-karson-vermiform.ngrok-free.dev/backend/api";
+const API_URL = "http://localhost/backend/api";
 
 export function LoginPage() {
-  const [showPassword, setShowPassword] = useState(false);
+  const [showPassword, setShowPassword] = useState(false)
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
