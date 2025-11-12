@@ -31,7 +31,7 @@ export function CatalogPage() {
         setIsLoading(true);
         setError(null);
         
-        const API_URL = "https://superanimal-karson-vermiform.ngrok-free.dev/backend/api/motorcycles.php";
+        const API_URL = "http://localhost/backend/api/motorcycles.php";
         console.log('🔄 Fetching motorcycles from:', API_URL);
         
         const response = await fetch(API_URL, {
@@ -132,7 +132,7 @@ export function CatalogPage() {
             <button
               onClick={() => {
                 // Test API langsung
-                window.open("https://superanimal-karson-vermiform.ngrok-free.dev/backend/api/motorcycles.php", "_blank");
+                window.open("http://localhost/backend/api/motorcycles.php", "_blank");
               }}
               className="w-full px-4 py-2 bg-gray-600 text-white rounded hover:bg-gray-700"
             >
