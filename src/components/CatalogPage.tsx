@@ -29,7 +29,7 @@ export function CatalogPage() {
     const fetchMotorcycles = async () => {
       try {
         setIsLoading(true);
-        const response = await fetch("http://localhost/backend/api/motorcycles.php");
+        const response = await fetch("https://superanimal-karson-vermiform.ngrok-free.dev/backend/api/motorcycles.php");
         if (!response.ok) throw new Error("Failed to fetch motorcycles");
         const data = await response.json();
         setMotorcycles(data);
