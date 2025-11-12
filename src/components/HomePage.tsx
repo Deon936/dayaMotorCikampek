@@ -57,7 +57,7 @@ export function HomePage() {
   useEffect(() => {
     const fetchMotorcycles = async () => {
       try {
-        const res = await fetch("http://localhost/backend/api/advertised_motorcycles.php");
+        const res = await fetch("https://superanimal-karson-vermiform.ngrok-free.dev/backend/api/advertised_motorcycles.php");
         const result = await res.json();
         if (result.success && Array.isArray(result.data)) {
           setMotorcycles(result.data);
