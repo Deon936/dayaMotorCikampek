@@ -17,7 +17,7 @@ export function AdminPanel() {
   const navigate = useNavigate();
 
   // Base URL untuk gambar
-  const BASE_URL = "https://superanimal-karson-vermiform.ngrok-free.dev/backend/";
+  const BASE_URL = "http://localhost/backend/";
   const API_MOTOR = `${BASE_URL}api/motorcycles.php`;
   const API_CUSTOMER = `${BASE_URL}api/customer.php`;
   const API_ORDERS = `${BASE_URL}api/orders.php`;
