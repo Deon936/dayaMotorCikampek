@@ -29,16 +29,48 @@ export function CatalogPage() {
     const fetchMotorcycles = async () => {
       try {
         setIsLoading(true);
-        const response = await fetch("https://superanimal-karson-vermiform.ngrok-free.dev/backend/api/motorcycles.php");
-        if (!response.ok) throw new Error("Failed to fetch motorcycles");
+        setError(null);
+        
+        const API_URL = "https://superanimal-karson-vermiform.ngrok-free.dev/backend/api/motorcycles.php";
+        console.log('🔄 Fetching motorcycles from:', API_URL);
+        
+        const response = await fetch(API_URL, {
+          method: 'GET',
+          headers: {
+            'Accept': 'application/json',
+            'Content-Type': 'application/json',
+          },
+        });
+
+        console.log('📡 Response status:', response.status);
+        console.log('📡 Response ok:', response.ok);
+
+        if (!response.ok) {
+          const errorText = await response.text();
+          console.error('❌ Response error text:', errorText);
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
         const data = await response.json();
-        setMotorcycles(data);
+        console.log('✅ Data received from API:', data);
+        
+        // Validasi data structure
+        if (Array.isArray(data)) {
+          console.log(`📊 Found ${data.length} motorcycles`);
+          setMotorcycles(data);
+        } else {
+          console.error('❌ Invalid data format - expected array:', data);
+          throw new Error('Invalid data format received from API');
+        }
+        
       } catch (err) {
+        console.error('💥 Fetch error:', err);
         setError(err instanceof Error ? err.message : "An error occurred");
       } finally {
         setIsLoading(false);
       }
     };
+
     fetchMotorcycles();
   }, []);
 
@@ -68,12 +100,18 @@ export function CatalogPage() {
     filteredMotorcycles.sort((a, b) => a.name.localeCompare(b.name));
   }
 
+  // Debug: Log filtered results
+  useEffect(() => {
+    console.log('🔍 Filtered motorcycles:', filteredMotorcycles);
+  }, [filteredMotorcycles]);
+
   if (isLoading)
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-red-600 mx-auto mb-4"></div>
           <p className="text-gray-600">Loading motorcycles...</p>
+          <p className="text-sm text-gray-500 mt-2">Fetching data from API...</p>
         </div>
       </div>
     );
@@ -81,14 +119,26 @@ export function CatalogPage() {
   if (error)
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center text-red-600">
-          <p>Error: {error}</p>
-          <button
-            onClick={() => window.location.reload()}
-            className="mt-4 px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700"
-          >
-            Try Again
-          </button>
+        <div className="text-center text-red-600 max-w-md">
+          <h3 className="text-xl font-bold mb-2">Error Loading Motorcycles</h3>
+          <p className="mb-4">{error}</p>
+          <div className="space-y-2">
+            <button
+              onClick={() => window.location.reload()}
+              className="w-full px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700"
+            >
+              Try Again
+            </button>
+            <button
+              onClick={() => {
+                // Test API langsung
+                window.open("https://superanimal-karson-vermiform.ngrok-free.dev/backend/api/motorcycles.php", "_blank");
+              }}
+              className="w-full px-4 py-2 bg-gray-600 text-white rounded hover:bg-gray-700"
+            >
+              Test API in Browser
+            </button>
+          </div>
         </div>
       </div>
     );
@@ -102,6 +152,9 @@ export function CatalogPage() {
           <p className="text-gray-600">
             Pilih motor Honda impian Anda dari koleksi lengkap kami.
           </p>
+          <div className="mt-2 text-sm text-gray-500">
+            Displaying {filteredMotorcycles.length} of {motorcycles.length} motorcycles
+          </div>
         </div>
 
         {/* === Search Bar === */}
@@ -153,19 +206,22 @@ export function CatalogPage() {
         {/* === Results Count === */}
         <div className="mb-4 text-gray-600">
           Showing {filteredMotorcycles.length} motorcycles
+          {searchQuery && ` for "${searchQuery}"`}
+          {selectedCategory !== 'all' && ` in ${selectedCategory}`}
         </div>
 
         {/* === Grid === */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {filteredMotorcycles.map((motorcycle) => (
             <Card
               key={motorcycle.id}
-              className="overflow-hidden hover:shadow-lg transition-shadow"
+              className="overflow-hidden hover:shadow-lg transition-shadow border border-gray-200"
             >
-              <div className="relative h-64">
+              <div className="relative h-64 bg-gray-100">
                 <ImageWithFallback
                   src={motorcycle.image}
                   alt={motorcycle.name}
+                  fallbackSrc="/images/motorcycle-placeholder.jpg"
                   className="w-full h-full object-cover"
                 />
                 {motorcycle.available && (
@@ -212,7 +268,7 @@ export function CatalogPage() {
                     }}
                   >
                     <ShoppingCart className="w-4 h-4" />
-                    Add
+                    Add to Cart
                   </Button>
 
                   <Link to={`/catalog/${motorcycle.id}`}>
@@ -226,11 +282,29 @@ export function CatalogPage() {
           ))}
         </div>
 
-        {filteredMotorcycles.length === 0 && (
+        {filteredMotorcycles.length === 0 && !isLoading && (
           <div className="text-center py-12">
-            <p className="text-gray-600">
+            <div className="text-gray-400 mb-4">
+              <Search className="w-16 h-16 mx-auto mb-2" />
+            </div>
+            <p className="text-gray-600 text-lg mb-2">
               Tidak ada motor yang cocok dengan pencarian Anda.
             </p>
+            <p className="text-gray-500 text-sm">
+              Coba ubah filter atau kata kunci pencarian.
+            </p>
+            {(searchQuery || selectedCategory !== 'all') && (
+              <Button
+                variant="outline"
+                className="mt-4"
+                onClick={() => {
+                  setSearchQuery('');
+                  setSelectedCategory('all');
+                }}
+              >
+                Clear Filters
+              </Button>
+            )}
           </div>
         )}
       </div>
