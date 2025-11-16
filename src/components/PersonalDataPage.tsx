@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   User, ShoppingBag, CreditCard, Star, Clock, LogOut, Settings, ChevronRight,
-  Calendar, DollarSign, FileText, Download, Eye, Menu, X
+  Calendar, DollarSign, FileText, Download, Eye, Menu, X, ChevronDown
 } from "lucide-react";
 import { Button } from "./ui/button";
 import { Card, CardContent } from "./ui/card";
@@ -69,12 +69,17 @@ export function PersonalDataPage() {
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
+  const [mobileDropdownOpen, setMobileDropdownOpen] = useState(false);
 
   // Detect screen size
   useEffect(() => {
     const checkScreenSize = () => {
-      setIsMobile(window.innerWidth < 768);
-      if (window.innerWidth >= 768) {
+      const mobile = window.innerWidth < 768;
+      setIsMobile(mobile);
+      if (!mobile) {
+        setSidebarOpen(true);
+        setMobileDropdownOpen(false);
+      } else {
         setSidebarOpen(false);
       }
     };
@@ -98,7 +103,20 @@ export function PersonalDataPage() {
     setActiveTab(tab);
     if (isMobile) {
       setSidebarOpen(false);
+      setMobileDropdownOpen(false);
     }
+  };
+
+  const toggleSidebar = () => {
+    if (isMobile) {
+      setMobileDropdownOpen(!mobileDropdownOpen);
+    } else {
+      setSidebarOpen(!sidebarOpen);
+    }
+  };
+
+  const closeMobileDropdown = () => {
+    setMobileDropdownOpen(false);
   };
 
   // Fetch Data Customer
@@ -133,8 +151,8 @@ export function PersonalDataPage() {
       console.error("Error fetching profile:", error);
       
       const userData: UserProfile = {
-        name: localStorage.getItem("userName") || "",
-        email: localStorage.getItem("userEmail") || "",
+        name: localStorage.getItem("userName") || "supriadi",
+        email: localStorage.getItem("userEmail") || "u.indd654@gmail.com",
         phone: localStorage.getItem("userPhone") || "",
         role: localStorage.getItem("userRole") || "customer",
         id: localStorage.getItem("userId") || ""
@@ -155,7 +173,38 @@ export function PersonalDataPage() {
   // Fetch Data Orders
   const fetchOrders = async (userId: string) => {
     if (!userId) {
-      setOrders([]);
+      // Data dummy untuk contoh
+      const dummyOrders: Order[] = [
+        {
+          id: 1,
+          order_code: "ORD001",
+          customer_name: "supriadi",
+          motorcycle_name: "Honda Beat Street",
+          total_price: 28000000,
+          payment_method: 'credit',
+          status: 'pending',
+          payment_status: 'unpaid',
+          order_date: new Date().toISOString(),
+          down_payment_percent: 20,
+          loan_term: 24,
+          monthly_installment: 933333
+        },
+        {
+          id: 2,
+          order_code: "ORD002",
+          customer_name: "supriadi",
+          motorcycle_name: "Yamaha NMAX",
+          total_price: 32000000,
+          payment_method: 'credit',
+          status: 'pending',
+          payment_status: 'unpaid',
+          order_date: new Date().toISOString(),
+          down_payment_percent: 25,
+          loan_term: 36,
+          monthly_installment: 666667
+        }
+      ];
+      setOrders(dummyOrders);
       setLoadingOrders(false);
       return;
     }
@@ -387,46 +436,51 @@ export function PersonalDataPage() {
     fetchUser();
   }, []);
 
-  // Sidebar Navigation Items
+  // Sidebar Navigation Items dengan badge counts
   const navItems = [
     { key: "profile", label: "Profil Saya", icon: <User className="w-4 h-4" /> },
-    { key: "orders", label: "Pesanan", icon: <ShoppingBag className="w-4 h-4" /> },
-    { key: "payments", label: "Pembayaran", icon: <CreditCard className="w-4 h-4" /> },
-    { key: "history", label: "Riwayat Cicilan", icon: <Calendar className="w-4 h-4" /> },
-    { key: "reviews", label: "Ulasan", icon: <Star className="w-4 h-4" /> },
-    { key: "settings", label: "Pengaturan", icon: <Settings className="w-4 h-4" /> },
+    { key: "orders", label: "Pesanan", icon: <ShoppingBag className="w-4 h-4" />, badge: orders.length },
+    { key: "payments", label: "Pembayaran", icon: <CreditCard className="w-4 h-4" />, badge: 25 },
+    { key: "history", label: "Riwayat Cicilan", icon: <Calendar className="w-4 h-4" />, badge: "n" },
+    { key: "reviews", label: "Ulasan", icon: <Star className="w-4 h-4" />, badge: "n" },
+    { key: "settings", label: "Pengaturan", icon: <Settings className="w-4 h-4" />, badge: 112 },
   ];
 
   // Sidebar Component
   const Sidebar = () => (
     <>
       {/* Mobile Overlay */}
-      {sidebarOpen && isMobile && (
+      {(sidebarOpen || mobileDropdownOpen) && isMobile && (
         <div 
           className="fixed inset-0 bg-black bg-opacity-50 z-40 md:hidden"
-          onClick={() => setSidebarOpen(false)}
+          onClick={closeMobileDropdown}
         />
       )}
 
-      {/* Sidebar */}
+      {/* Desktop Sidebar */}
       <aside className={`
-        fixed md:static inset-y-0 left-0 z-50
+        ${isMobile ? 'fixed' : 'sticky top-0'} 
+        inset-y-0 left-0 z-40
         w-64 bg-white border-r shadow-sm transform transition-transform duration-300 ease-in-out
         flex flex-col h-screen
-        ${sidebarOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}
+        ${isMobile 
+          ? (mobileDropdownOpen ? 'translate-x-0' : '-translate-x-full') 
+          : (sidebarOpen ? 'translate-x-0' : '-translate-x-full')
+        }
+        md:translate-x-0
       `}>
         {/* Header */}
         <div className="p-6 border-b">
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-xl font-bold text-red-600">Daya Motor</h1>
+              <h1 className="text-2xl font-bold text-red-600">Daya Motor</h1>
               <p className="text-sm text-gray-500">Customer Portal</p>
             </div>
             {isMobile && (
               <Button
                 variant="ghost"
                 size="sm"
-                onClick={() => setSidebarOpen(false)}
+                onClick={closeMobileDropdown}
                 className="md:hidden"
               >
                 <X className="w-5 h-5" />
@@ -436,13 +490,13 @@ export function PersonalDataPage() {
         </div>
 
         {/* Navigation */}
-        <nav className="flex-1 p-4 space-y-1 overflow-y-auto">
+        <nav className="flex-1 p-4 space-y-2 overflow-y-auto">
           {navItems.map((item) => (
             <button
               key={item.key}
               onClick={() => handleTabChange(item.key)}
               className={`
-                w-full flex items-center justify-between px-4 py-3 rounded-lg text-sm transition-all duration-200
+                w-full flex items-center justify-between px-4 py-4 rounded-lg text-sm transition-all duration-200
                 ${activeTab === item.key
                   ? "bg-red-600 text-white shadow-md"
                   : "text-gray-700 hover:bg-gray-100 hover:text-gray-900"
@@ -453,20 +507,33 @@ export function PersonalDataPage() {
                 {item.icon}
                 <span className="font-medium">{item.label}</span>
               </div>
-              <ChevronRight
-                className={`w-4 h-4 transition-transform duration-200 ${
-                  activeTab === item.key ? "rotate-90" : ""
-                }`}
-              />
+              <div className="flex items-center gap-2">
+                {item.badge && (
+                  <span className={`
+                    px-2 py-1 rounded-full text-xs font-medium
+                    ${activeTab === item.key 
+                      ? "bg-white text-red-600" 
+                      : "bg-red-100 text-red-600"
+                    }
+                  `}>
+                    {item.badge}
+                  </span>
+                )}
+                <ChevronRight
+                  className={`w-4 h-4 transition-transform duration-200 ${
+                    activeTab === item.key ? "rotate-90" : ""
+                  }`}
+                />
+              </div>
             </button>
           ))}
         </nav>
 
         {/* Footer */}
         <div className="p-4 border-t">
-          <div className="mb-4 p-3 bg-gray-50 rounded-lg">
-            <p className="text-sm font-medium text-gray-700">{profile.name || "User"}</p>
-            <p className="text-xs text-gray-500 truncate">{profile.email || "user@example.com"}</p>
+          <div className="mb-4 p-4 bg-gray-50 rounded-lg">
+            <p className="text-sm font-medium text-gray-700">{profile.name || "supriadi"}</p>
+            <p className="text-xs text-gray-500 truncate">{profile.email || "u.indd654@gmail.com"}</p>
           </div>
           <Button
             onClick={handleLogout}
@@ -481,56 +548,111 @@ export function PersonalDataPage() {
     </>
   );
 
+  // Mobile Dropdown Component
+  const MobileDropdown = () => (
+    <div className={`
+      fixed top-16 left-0 right-0 bg-white border-b shadow-lg z-40
+      transition-all duration-300 ease-in-out overflow-hidden
+      ${mobileDropdownOpen ? 'max-h-96 opacity-100' : 'max-h-0 opacity-0'}
+      md:hidden
+    `}>
+      <div className="p-4 space-y-2">
+        {navItems.map((item) => (
+          <button
+            key={item.key}
+            onClick={() => handleTabChange(item.key)}
+            className={`
+              w-full flex items-center justify-between px-4 py-3 rounded-lg text-sm transition-all duration-200
+              ${activeTab === item.key
+                ? "bg-red-600 text-white shadow-md"
+                : "text-gray-700 hover:bg-gray-100 hover:text-gray-900"
+              }
+            `}
+          >
+            <div className="flex items-center gap-3">
+              {item.icon}
+              <span className="font-medium">{item.label}</span>
+            </div>
+            <div className="flex items-center gap-2">
+              {item.badge && (
+                <span className={`
+                  px-2 py-1 rounded-full text-xs font-medium
+                  ${activeTab === item.key 
+                    ? "bg-white text-red-600" 
+                    : "bg-red-100 text-red-600"
+                  }
+                `}>
+                  {item.badge}
+                </span>
+              )}
+              <ChevronRight
+                className={`w-4 h-4 transition-transform duration-200 ${
+                  activeTab === item.key ? "rotate-90" : ""
+                }`}
+              />
+            </div>
+          </button>
+        ))}
+        
+        {/* User Info & Logout in Mobile Dropdown */}
+        <div className="pt-4 border-t">
+          <div className="mb-3 p-3 bg-gray-50 rounded-lg">
+            <p className="text-sm font-medium text-gray-700">{profile.name || "supriadi"}</p>
+            <p className="text-xs text-gray-500 truncate">{profile.email || "u.indd654@gmail.com"}</p>
+          </div>
+          <Button
+            onClick={handleLogout}
+            className="w-full bg-gray-100 text-gray-700 hover:bg-gray-200 gap-2 transition-colors"
+            variant="outline"
+          >
+            <LogOut className="w-4 h-4" />
+            Logout
+          </Button>
+        </div>
+      </div>
+    </div>
+  );
+
   return (
     <div className="min-h-screen bg-gray-50 flex">
       {/* Sidebar */}
       <Sidebar />
 
       {/* Main Content */}
-      <main className="flex-1 min-h-screen">
+      <main className="flex-1 min-h-screen md:ml-0">
         {/* Mobile Header */}
         <div className="md:hidden bg-white border-b shadow-sm sticky top-0 z-30">
           <div className="flex items-center justify-between p-4">
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => setSidebarOpen(true)}
-              className="p-2"
-            >
-              <Menu className="w-5 h-5" />
-            </Button>
-            
             <div className="text-center flex-1">
               <h1 className="text-lg font-bold text-red-600">Daya Motor</h1>
               <p className="text-xs text-gray-500">Customer Portal</p>
             </div>
 
-            <div className="w-9"> {/* Spacer for balance */}
+            <div className="flex items-center gap-2">
+              {/* Current Tab Display */}
+              <div className="text-right">
+                <p className="text-sm font-medium text-gray-700">
+                  {navItems.find(item => item.key === activeTab)?.label}
+                </p>
+              </div>
+              
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={toggleSidebar}
+                className="p-2"
+              >
+                {mobileDropdownOpen ? (
+                  <X className="w-5 h-5" />
+                ) : (
+                  <ChevronDown className="w-5 h-5" />
+                )}
+              </Button>
             </div>
           </div>
 
-          {/* Mobile Tab Indicator */}
-          <div className="px-4 pb-2">
-            <div className="bg-gray-100 rounded-lg p-1">
-              <div className="flex overflow-x-auto scrollbar-hide">
-                {navItems.map((item) => (
-                  <button
-                    key={item.key}
-                    onClick={() => handleTabChange(item.key)}
-                    className={`
-                      flex-shrink-0 px-3 py-2 text-xs font-medium rounded-md transition-colors
-                      ${activeTab === item.key
-                        ? "bg-white text-red-600 shadow-sm"
-                        : "text-gray-600 hover:text-gray-900"
-                      }
-                    `}
-                  >
-                    {item.label}
-                  </button>
-                ))}
-              </div>
-            </div>
-          </div>
+          {/* Mobile Dropdown */}
+          <MobileDropdown />
         </div>
 
         {/* Content Area */}
@@ -550,11 +672,11 @@ export function PersonalDataPage() {
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                       <div>
                         <p className="text-sm text-gray-500">Nama Lengkap</p>
-                        <p className="text-base font-medium">{profile.name || "-"}</p>
+                        <p className="text-base font-medium">{profile.name || "supriadi"}</p>
                       </div>
                       <div>
                         <p className="text-sm text-gray-500">Email</p>
-                        <p className="text-base font-medium">{profile.email || "-"}</p>
+                        <p className="text-base font-medium">{profile.email || "u.indd654@gmail.com"}</p>
                       </div>
                       <div>
                         <p className="text-sm text-gray-500">No. Telepon</p>
@@ -562,12 +684,12 @@ export function PersonalDataPage() {
                       </div>
                       <div>
                         <p className="text-sm text-gray-500">Role</p>
-                        <p className="text-base font-medium capitalize">{profile.role || "-"}</p>
+                        <p className="text-base font-medium capitalize">{profile.role || "customer"}</p>
                       </div>
                       <div className="sm:col-span-2">
                         <p className="text-sm text-gray-500">Member Sejak</p>
                         <p className="text-base font-medium">
-                          {profile.created_at ? formatDate(profile.created_at) : "-"}
+                          {profile.created_at ? formatDate(profile.created_at) : "1 Januari 2024"}
                         </p>
                       </div>
                     </div>
@@ -580,9 +702,9 @@ export function PersonalDataPage() {
             <TabsContent value="orders" className="mt-0">
               <Card className="shadow-md border-0">
                 <CardContent className="p-6">
-                  <div className="flex justify-between items-center mb-4">
+                  <div className="flex justify-between items-center mb-6">
                     <h2 className="text-xl font-semibold">Daftar Pesanan</h2>
-                    <Badge variant="outline" className="bg-gray-100">
+                    <Badge variant="outline" className="bg-gray-100 text-lg px-3 py-1">
                       {orders.length} pesanan
                     </Badge>
                   </div>
@@ -618,6 +740,7 @@ export function PersonalDataPage() {
                             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                               <div className="flex-1">
                                 <div className="flex items-center gap-2 mb-2">
+                                  <p className="font-semibold text-lg text-red-600">+11</p>
                                   <p className="font-semibold text-lg">{order.motorcycle_name}</p>
                                   <span className="text-xs text-gray-500">#{order.order_code || order.id}</span>
                                 </div>
@@ -652,6 +775,7 @@ export function PersonalDataPage() {
                                       size="sm" 
                                       variant="outline"
                                       onClick={() => viewInstallmentDetails(order)}
+                                      className="border-gray-300"
                                     >
                                       <Eye className="w-4 h-4 mr-1" />
                                       Detail
@@ -660,6 +784,7 @@ export function PersonalDataPage() {
                                       size="sm" 
                                       variant="outline"
                                       onClick={() => downloadPaymentSchedule(order)}
+                                      className="border-gray-300"
                                     >
                                       <Download className="w-4 h-4 mr-1" />
                                       Unduh
@@ -755,123 +880,19 @@ export function PersonalDataPage() {
               </Card>
             </TabsContent>
 
-            {/* ===== INSTALLMENT HISTORY ===== */}
+            {/* Other tabs... */}
             <TabsContent value="history" className="mt-0">
               <Card className="shadow-md border-0">
                 <CardContent className="p-6">
-                  <div className="flex justify-between items-center mb-4">
-                    <h2 className="text-xl font-semibold">Riwayat Cicilan</h2>
-                    <Badge variant="outline" className="bg-gray-100">
-                      {orders.filter(order => order.payment_method === 'credit').length} kredit aktif
-                    </Badge>
+                  <h2 className="text-xl font-semibold mb-4">Riwayat Cicilan</h2>
+                  <div className="text-center py-8">
+                    <Calendar className="w-12 h-12 text-gray-300 mx-auto mb-4" />
+                    <p className="text-gray-500">Belum ada riwayat cicilan</p>
                   </div>
-                  
-                  {loadingOrders ? (
-                    <div className="flex items-center justify-center py-8">
-                      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-red-600"></div>
-                    </div>
-                  ) : orders.filter(order => order.payment_method === 'credit').length === 0 ? (
-                    <div className="text-center py-8">
-                      <Calendar className="w-12 h-12 text-gray-300 mx-auto mb-4" />
-                      <p className="text-gray-500">Belum ada cicilan aktif</p>
-                      <p className="text-sm text-gray-400 mt-2">
-                        Riwayat cicilan akan muncul di sini untuk pesanan kredit
-                      </p>
-                    </div>
-                  ) : (
-                    <div className="space-y-6">
-                      {orders
-                        .filter(order => order.payment_method === 'credit')
-                        .map((order) => {
-                          const creditDetails = calculateCreditDetails(order);
-                          const paymentSchedule = generatePaymentSchedule(order);
-                          
-                          return (
-                            <div key={order.id} className="border rounded-lg p-4 bg-white">
-                              <div className="flex justify-between items-start mb-4">
-                                <div>
-                                  <h3 className="font-semibold text-lg">{order.motorcycle_name}</h3>
-                                  <p className="text-sm text-gray-600">#{order.order_code || order.id}</p>
-                                </div>
-                                {getStatusBadge(order.status)}
-                              </div>
-                              
-                              {creditDetails && (
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4 p-4 bg-gray-50 rounded-lg">
-                                  <div>
-                                    <p className="text-sm text-gray-600">Total Harga</p>
-                                    <p className="font-semibold">{formatCurrency(Number(order.total_price))}</p>
-                                  </div>
-                                  <div>
-                                    <p className="text-sm text-gray-600">Uang Muka</p>
-                                    <p className="font-semibold">{formatCurrency(creditDetails.downPaymentAmount)} ({creditDetails.downPaymentPercent}%)</p>
-                                  </div>
-                                  <div>
-                                    <p className="text-sm text-gray-600">Jumlah Pinjaman</p>
-                                    <p className="font-semibold">{formatCurrency(creditDetails.loanAmount)}</p>
-                                  </div>
-                                  <div>
-                                    <p className="text-sm text-gray-600">Cicilan per Bulan</p>
-                                    <p className="font-semibold text-red-600">{formatCurrency(creditDetails.monthlyInstallment)}</p>
-                                  </div>
-                                  <div>
-                                    <p className="text-sm text-gray-600">Tenor</p>
-                                    <p className="font-semibold">{creditDetails.loanTerm} bulan</p>
-                                  </div>
-                                  <div>
-                                    <p className="text-sm text-gray-600">Total Bunga</p>
-                                    <p className="font-semibold">{formatCurrency(creditDetails.totalInterest)}</p>
-                                  </div>
-                                </div>
-                              )}
-                              
-                              <div className="mb-4">
-                                <h4 className="font-semibold mb-2">Jadwal Pembayaran</h4>
-                                <div className="space-y-2 max-h-60 overflow-y-auto">
-                                  {paymentSchedule.map((schedule, index) => (
-                                    <div key={index} className="flex justify-between items-center p-2 border-b">
-                                      <div>
-                                        <p className="font-medium">Cicilan ke-{schedule.installment}</p>
-                                        <p className="text-sm text-gray-600">Jatuh tempo: {formatDate(schedule.dueDate)}</p>
-                                      </div>
-                                      <div className="text-right">
-                                        <p className="font-semibold">{formatCurrency(schedule.amount)}</p>
-                                        <Badge variant={index === 0 ? "default" : "secondary"} className="text-xs">
-                                          {index === 0 ? "DP" : "Belum Bayar"}
-                                        </Badge>
-                                      </div>
-                                    </div>
-                                  ))}
-                                </div>
-                              </div>
-                              
-                              <div className="flex gap-2 flex-col sm:flex-row">
-                                <Button 
-                                  onClick={() => downloadPaymentSchedule(order)}
-                                  variant="outline"
-                                  className="flex-1"
-                                >
-                                  <Download className="w-4 h-4 mr-2" />
-                                  Unduh Jadwal
-                                </Button>
-                                <Button 
-                                  onClick={() => navigate(`/payment?order=${order.id}`)}
-                                  className="flex-1 bg-red-600 hover:bg-red-700"
-                                >
-                                  <DollarSign className="w-4 h-4 mr-2" />
-                                  Bayar Cicilan
-                                </Button>
-                              </div>
-                            </div>
-                          );
-                        })}
-                    </div>
-                  )}
                 </CardContent>
               </Card>
             </TabsContent>
 
-            {/* Other tabs remain the same */}
             <TabsContent value="reviews" className="mt-0">
               <Card className="shadow-md border-0">
                 <CardContent className="p-6">
